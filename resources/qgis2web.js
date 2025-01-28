@@ -140,23 +140,35 @@ function createPopupField(currentFeature, currentFeatureKeys, layer) {
                 layer.get('fieldLabels')[currentFeatureKeys[i]] == "header label - visible with data") {
                 popupField += '<strong>' + layer.get('fieldAliases')[currentFeatureKeys[i]] + '</strong><br />';
             }
-            if (layer.get('fieldImages')[currentFeatureKeys[i]] != "ExternalResource") {
-				popupField += (currentFeature.get(currentFeatureKeys[i]) != null ? autolinker.link(currentFeature.get(currentFeatureKeys[i]).toLocaleString()) + '</td>' : '');
-			} else {
-				var fieldValue = currentFeature.get(currentFeatureKeys[i]);
-				if (/\.(gif|jpg|jpeg|tif|tiff|png|avif|webp|svg)$/i.test(fieldValue)) {
-					popupField += (fieldValue != null ? '<img src="images/' + fieldValue.replace(/[\\\/:]/g, '_').trim() + '" /></td>' : '');
-				} else if (/\.(mp4|webm|ogg|avi|mov|flv)$/i.test(fieldValue)) {
-					popupField += (fieldValue != null ? '<video controls><source src="images/' + fieldValue.replace(/[\\\/:]/g, '_').trim() + '" type="video/mp4">Il tuo browser non supporta il tag video.</video></td>' : '');
-				} else {
-					popupField += (fieldValue != null ? autolinker.link(fieldValue.toLocaleString()) + '</td>' : '');
-				}
-			}
+
+            // Process hyperlink fields
+            var fieldValue = currentFeature.get(currentFeatureKeys[i]);
+            if (fieldValue != null) {
+                fieldValue = fieldValue.toLocaleString();
+                
+                // Check if field should be a hyperlink
+                if (currentFeatureKeys[i] === "Find a Grave" || currentFeatureKeys[i] === "1978 Survey") {
+                    popupField += `<a href="${fieldValue}" target="_blank">${currentFeatureKeys[i] === "Find a Grave" ? "Find a Grave" : "1978 Survey"}</a></td>`;
+                } 
+                else if (layer.get('fieldImages')[currentFeatureKeys[i]] != "ExternalResource") {
+                    popupField += autolinker.link(fieldValue) + '</td>';
+                } 
+                else {
+                    if (/\.(gif|jpg|jpeg|tif|tiff|png|avif|webp|svg)$/i.test(fieldValue)) {
+                        popupField += `<img src="images/${fieldValue.replace(/[\\\/:]/g, '_').trim()}" /></td>`;
+                    } else if (/\.(mp4|webm|ogg|avi|mov|flv)$/i.test(fieldValue)) {
+                        popupField += `<video controls><source src="images/${fieldValue.replace(/[\\\/:]/g, '_').trim()}" type="video/mp4">Your browser does not support the video tag.</video></td>`;
+                    } else {
+                        popupField += autolinker.link(fieldValue) + '</td>';
+                    }
+                }
+            }
             popupText += '<tr>' + popupField + '</tr>';
         }
     }
     return popupText;
 }
+
 
 var highlight;
 var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
